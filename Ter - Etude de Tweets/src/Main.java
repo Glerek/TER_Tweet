@@ -1,4 +1,5 @@
 
+import Program.XmlAction;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -35,6 +36,11 @@ public class Main {
 		}
 
 		try {
+                    
+                        XmlAction xmlAction = new XmlAction();
+                        xmlAction.parseXmlFile();
+                        xmlAction.parseDocument();
+                        
 
 			java.sql.Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/ter","root","");
 

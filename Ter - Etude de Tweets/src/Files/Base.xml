@@ -8,10 +8,10 @@ and open the template in the editor.
 <root>
     <Connection>
         <StringUrl>
-
+            jdbc:mysql://localhost:3306/tweets
         </StringUrl>
         <StringUser>
-            
+            root
         </StringUser>
         <StringPassword>
             
