@@ -4,11 +4,17 @@
  */
 package Interfaces;
 
+import TweetRating.Procedure;
+import java.sql.SQLException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  *
  * @author kevinsancho
  */
 public class PanelEvaluation extends javax.swing.JFrame {
+    private Procedure procedure;
 
     /**
      * Creates new form PanelEvaluation
@@ -27,10 +33,17 @@ public class PanelEvaluation extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel1 = new javax.swing.JPanel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
+        neutral = new javax.swing.JButton();
+        against = new javax.swing.JButton();
+        rater = new javax.swing.JTextField();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        favorable = new javax.swing.JButton();
+        cantSay = new javax.swing.JButton();
+        Comment = new javax.swing.JTextField();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        tweetContent = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -42,50 +55,112 @@ public class PanelEvaluation extends javax.swing.JFrame {
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
         jPanel1.setForeground(new java.awt.Color(255, 255, 255));
 
-        jButton1.setText("Submit");
-
-        jButton2.setText("Cancel");
-
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-
-            },
-            new String [] {
-                "Subject", "Tweet content", "Evaluation", "Comment"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, true, true
-            };
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
+        neutral.setText("Neutral");
+        neutral.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                neutralActionPerformed(evt);
             }
         });
-        jTable2.getTableHeader().setReorderingAllowed(false);
-        jScrollPane2.setViewportView(jTable2);
+
+        against.setText("Against");
+        against.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                againstActionPerformed(evt);
+            }
+        });
+
+        rater.setHorizontalAlignment(javax.swing.JTextField.CENTER);
+        rater.setText("Name");
+
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        jLabel1.setText("Subject : ");
+
+        jLabel2.setText("Tweet content :");
+
+        jLabel3.setText("Comment :");
+
+        favorable.setText("Favorable");
+        favorable.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                favorableActionPerformed(evt);
+            }
+        });
+
+        cantSay.setText("Can't say");
+        cantSay.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cantSayActionPerformed(evt);
+            }
+        });
+
+        Comment.setText("...");
+        Comment.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                CommentActionPerformed(evt);
+            }
+        });
+
+        tweetContent.setColumns(20);
+        tweetContent.setRows(5);
+        tweetContent.setText("...\n");
+        jScrollPane1.setViewportView(tweetContent);
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .add(jButton2)
-                .add(18, 18, 18)
-                .add(jButton1)
-                .addContainerGap())
-            .add(jScrollPane2, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 642, Short.MAX_VALUE)
+            .add(jPanel1Layout.createSequentialGroup()
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(93, 93, 93)
+                        .add(against)
+                        .add(18, 18, 18)
+                        .add(neutral)
+                        .add(18, 18, 18)
+                        .add(favorable)
+                        .add(18, 18, 18)
+                        .add(cantSay))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .add(rater, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 267, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(110, Short.MAX_VALUE))
+            .add(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(jLabel2)
+                            .add(jLabel3)
+                            .add(jLabel1))
+                        .add(0, 0, Short.MAX_VALUE))
+                    .add(jPanel1Layout.createSequentialGroup()
+                        .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                            .add(Comment)
+                            .add(jScrollPane1))
+                        .addContainerGap())))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(org.jdesktop.layout.GroupLayout.TRAILING, jPanel1Layout.createSequentialGroup()
-                .add(jScrollPane2, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap()
+                .add(rater, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(8, 8, 8)
+                .add(jLabel1)
+                .add(18, 18, 18)
+                .add(jLabel2)
+                .add(18, 18, 18)
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 128, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .add(18, 18, 18)
+                .add(jLabel3)
+                .add(18, 18, 18)
+                .add(Comment, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 116, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
-                    .add(jButton1)
-                    .add(jButton2))
-                .addContainerGap())
+                    .add(against)
+                    .add(neutral)
+                    .add(favorable)
+                    .add(cantSay))
+                .addContainerGap(21, Short.MAX_VALUE))
         );
 
         jMenu1.setText("Menu");
@@ -111,6 +186,47 @@ public class PanelEvaluation extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
+    private void againstActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_againstActionPerformed
+        try {
+            procedure.tweetSuivant("against", this.Comment.getText(),this.rater.getText());
+        } catch (SQLException ex) {
+            Logger.getLogger(PanelEvaluation.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_againstActionPerformed
+
+    private void cantSayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cantSayActionPerformed
+        try {
+            procedure.tweetSuivant("cantSay", this.Comment.getText(),this.rater.getText());
+        } catch (SQLException ex) {
+            Logger.getLogger(PanelEvaluation.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_cantSayActionPerformed
+
+    private void neutralActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_neutralActionPerformed
+        try {
+            procedure.tweetSuivant("neutral", this.Comment.getText(),this.rater.getText());
+        } catch (SQLException ex) {
+            Logger.getLogger(PanelEvaluation.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_neutralActionPerformed
+
+    private void favorableActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_favorableActionPerformed
+        try {
+            procedure.tweetSuivant("favorable", this.Comment.getText(),this.rater.getText());
+        } catch (SQLException ex) {
+            Logger.getLogger(PanelEvaluation.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_favorableActionPerformed
+
+    private void CommentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_CommentActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_CommentActionPerformed
+
+    public void setProcedure(Procedure procedure)
+    {
+        this.procedure = procedure;
+    }
+    
     /**
      * @param args the command line arguments
      */
@@ -153,13 +269,20 @@ public class PanelEvaluation extends javax.swing.JFrame {
         });
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    public javax.swing.JTextField Comment;
+    private javax.swing.JButton against;
+    private javax.swing.JButton cantSay;
+    private javax.swing.JButton favorable;
+    public javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane2;
-    private javax.swing.JTable jTable2;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JButton neutral;
+    public javax.swing.JTextField rater;
+    public javax.swing.JTextArea tweetContent;
     // End of variables declaration//GEN-END:variables
 }

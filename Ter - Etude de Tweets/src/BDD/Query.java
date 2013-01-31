@@ -17,7 +17,7 @@ public class Query {
     private String user;
     private String password;
     
-    public Query(String requete)
+    public Query()
     {
         /*XmlAction xmlAction = new XmlAction();
         xmlAction.parseXmlFile();
@@ -47,6 +47,29 @@ public class Query {
 			System.exit(1);
 		}
         return results;
+    }
+    
+    public void sendUpdate(String queryString)
+    {
+        try {
+                        Statement my_st = null;
+
+			java.sql.Connection connection = DriverManager.getConnection(connectionString,user,password);
+
+			my_st = connection.createStatement();
+
+			my_st.executeUpdate(queryString);
+
+		} catch (Exception ex) {
+			System.out.println(ex.toString());
+			ex.printStackTrace();
+			System.exit(1);
+		}
+    }
+    
+    private void sauvegarde()
+    {
+        String sauvegarde = "select val_string,fk_id_user, count(val_string) from tweets.notes group by val_string,fk_id_user order by rand() limit 50";
     }
     
 }

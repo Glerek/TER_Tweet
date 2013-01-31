@@ -1,5 +1,5 @@
 
-import Program.XmlAction;
+import ReadXml.XmlConnection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
@@ -34,31 +34,8 @@ public class Main {
 			System.out.println(ex.toString());
 			System.exit(1);
 		}
-
-		try {
-                    
-                        XmlAction xmlAction = new XmlAction();
-                        xmlAction.parseXmlFile();
-                        xmlAction.parseDocument();
-                        
-
-			java.sql.Connection connection = DriverManager.getConnection("jdbc:mysql://localhost/ter","root","");
-
-			my_st = connection.createStatement();
-
-			String req = "SELECT * FROM tweets WHERE fk_nom_user='fhollande' AND date_time>'2012-02-23 00:00:00' AND date_time<'2012-02-25 00:00:00'";
-
-			ResultSet results = my_st.executeQuery(req);
-			while (results.next()) {
-				System.out.println(results.getString(5));
-			}
-
-
-		} catch (Exception ex) {
-			System.out.println(ex.toString());
-			ex.printStackTrace();
-			System.exit(1);
-		}
+                XmlConnection xmlAction = new XmlConnection();
+                xmlAction.parseXmlFile();
 
 	}
     }
