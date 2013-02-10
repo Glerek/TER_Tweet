@@ -23,7 +23,8 @@ public class Query {
         xmlAction.parseXmlFile();
         xmlAction.parseDocument();*/
         
-        this.connectionString = "jdbc:mysql://localhost:3306/tweets";
+        //this.connectionString = "jdbc:mysql://localhost:3306/tweets";
+        this.connectionString = "jdbc:mysql://localhost/tweets";
         this.user = "root";
         this.password = "";
     }

@@ -3,6 +3,10 @@ import ReadXml.XmlConnection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import Analyse.*;
+import java.io.IOException;
+import java.sql.SQLException;
+import org.annolab.tt4j.TreeTaggerException;
 
 /*
  * To change this template, choose Tools | Templates
@@ -18,7 +22,7 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) 
+    public static void main(String[] args) throws IOException, TreeTaggerException, SQLException 
     {
         Statement my_st = null;
 
@@ -36,6 +40,16 @@ public class Main {
 		}
                 XmlConnection xmlAction = new XmlConnection();
                 xmlAction.parseXmlFile();
-
+                /*System.out.println("Analyse de la phrase Test");
+                TT4J tt = new TT4J("Test");
+                Analyse ana = new Analyse();
+                System.out.println("Update de la base des Mots Dieses");
+                ana.updateHashtagBase();
+                System.out.println("Update des evaluations des Mots Dieses");
+                ana.updateHashtagRating();
+                System.out.println("Update de la base des expressions");
+                ana.updateExpressionBase();
+                System.out.println("Update des evaluations des expressions");
+                ana.updateExpressionRating();*/
 	}
     }
