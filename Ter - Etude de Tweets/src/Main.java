@@ -51,5 +51,7 @@ public class Main {
                 ana.updateExpressionBase();
                 System.out.println("Update des evaluations des expressions");
                 ana.updateExpressionRating();*/
+                Analyse ana = new Analyse();
+                ana.evaluateTweets("@bayrou #FH2012 Concours d'entrée ou épreuves d'admission pour les études universitaires.", 65789);
 	}
     }

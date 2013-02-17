@@ -133,6 +133,10 @@ public class Analyse {
     }
     
     public void updateHashtagBase() throws SQLException {
+        /* Ici contrairement aux autre fonctions suivantes, on analyse sur le base
+         * globale de tweets et non pas seulement sur ceux qui sont évalués.
+         * Cela permet d'avoir une base de hashtasgs vraiment plus complète.
+         */
         Query query = new Query();
         String req, nomHashtag;
         ResultSet results, results1;
@@ -330,4 +334,46 @@ public class Analyse {
             }
         }
     }
-}
+    
+    public void evaluateTweets(String tweetText, int idTweet) throws SQLException, IOException, TreeTaggerException {
+        Iterator it;
+        String hashTag, req, nomExpression;
+        Query query = new Query();
+        ResultSet results;
+        ArrayList<String> listeHashtags = returnHashtags(tweetText);
+        int total, eval = -1;
+        TT4J tt;
+        ArrayList<String> listLemma;
+        it = listeHashtags.iterator();
+        
+        //On evalue en fonction des hashtags
+        //PROBLEME ICI SI LE HASHTAG N'A JAMAIS ETE RATE
+        while(it.hasNext()) {
+            hashTag = (String) it.next();
+            req = "SELECT * FROM hashtag, hashtag_rating WHERE id_hashtag = fk_id_hashtag AND hashtag LIKE '"+hashTag+"'";
+            results = query.sendQuery(req);
+            results.next();
+            // 70% pour ou contre on colore sinon on vire
+            total = results.getInt("nb_against") + results.getInt("nb_favorable") + results.getInt("nb_neutral") + results.getInt("nb_cantSay");
+            if(results.getLong("nb_favorable")>((70*total)/100)) {
+                // Coloré favorable
+                eval = 0;
+            }
+            else if (results.getLong("nb_against")>((70*total)/100)) {
+                // Coloré against
+                eval = 1;
+            }
+        }
+        System.out.println(eval);
+        
+        //On evalue en fonctions des expressions
+        tt = new TT4J(cleanString(tweetText));
+        listLemma = tt.getLemma();
+        it = listLemma.iterator();
+        
+        while(it.hasNext()) {
+            nomExpression = (String) it.next();
+            System.out.println(nomExpression);
+        }
+    }
+}   
