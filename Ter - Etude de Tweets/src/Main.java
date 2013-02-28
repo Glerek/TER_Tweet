@@ -41,8 +41,8 @@ public class Main {
                 XmlConnection xmlAction = new XmlConnection();
                 xmlAction.parseXmlFile();
                 /*System.out.println("Analyse de la phrase Test");
-                TT4J tt = new TT4J("Test");
-                Analyse ana = new Analyse();
+                TT4J tt = new TT4J("Test");*/
+                /*Analyse ana = new Analyse();
                 System.out.println("Update de la base des Mots Dieses");
                 ana.updateHashtagBase();
                 System.out.println("Update des evaluations des Mots Dieses");

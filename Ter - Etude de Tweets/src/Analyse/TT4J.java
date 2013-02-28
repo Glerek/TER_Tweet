@@ -5,6 +5,7 @@
 package Analyse;
 
 import java.io.IOException;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import static java.util.Arrays.asList;
 import org.annolab.tt4j.*;
@@ -42,11 +43,16 @@ public class TT4J {
 });
             tt.setHandler(new TokenHandler<String>() {
                 public void token(String token, String pos, String lemma) {
-                    if(pos == "NOM" || pos.indexOf("VER") != -1) {
-                        //System.out.println(token + "\t" + pos + "\t" + lemma);
-                        positionTt4j.add(pos);
-                        lemma = lemma.replaceAll("[\\W]","");
-                        lemmaTt4j.add(lemma);
+                    if(pos == "NAM" || pos == "NOM" || pos.indexOf("VER") != -1) { 
+                        lemma = Normalizer.normalize(lemma, Normalizer.Form.NFD).replaceAll("[\u0300-\u036F]", "");
+                        lemma = lemma.replaceAll("['\"()\\.,!\\?:&%]","");
+                        lemma = lemma.replaceAll("[0-9]","");
+                        lemma = lemma.replaceAll("[\\-]","");
+                        if(lemma.isEmpty() == false) {
+                            //System.out.println(token + "\t" + pos + "\t" + lemma);
+                            positionTt4j.add(pos);
+                            lemmaTt4j.add(lemma);
+                        }
                     }
                 }
             });

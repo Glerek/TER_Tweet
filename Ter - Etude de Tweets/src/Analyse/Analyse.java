@@ -133,46 +133,40 @@ public class Analyse {
     }
     
     public void updateHashtagBase() throws SQLException {
-        /* Ici contrairement aux autre fonctions suivantes, on analyse sur le base
-         * globale de tweets et non pas seulement sur ceux qui sont évalués.
-         * Cela permet d'avoir une base de hashtasgs vraiment plus complète.
-         */
         Query query = new Query();
         String req, nomHashtag;
         ResultSet results, results1;
-        int nbTweets, limitMin = 0, limitMax = 1000;
         Iterator it;
         ArrayList<String> listeTweet;
         
-        req = "UPDATE tweets SET analysed = 1 WHERE text NOT LIKE '%#%'";
-        query.sendUpdate(req);
-        req = "SELECT COUNT(*) FROM tweets WHERE analysed = 0";
+        req = "SELECT * FROM evaluation WHERE hashtag_analysed = 0";
         results = query.sendQuery(req);
-        results.next();
-        nbTweets = results.getInt(1);
-
-        for(int i=0;i<(Math.round(nbTweets/limitMax)+1);i++) {
-            req = "SELECT text, id_tweet FROM tweets WHERE analysed = 0 LIMIT "+limitMin+", "+limitMax;
-            results = query.sendQuery(req);
-
-            while (results.next()) {
-                    listeTweet = returnHashtags(results.getString(1));
-                    it = listeTweet.iterator();
-
-                    while(it.hasNext()) {
-                        nomHashtag = (String) it.next();
-                        req = "SELECT COUNT(*) FROM hashtag WHERE hashtag = '"+nomHashtag+"'";
-                        results1 = query.sendQuery(req);
-                        results1.next();
-                        if(results1.getInt(1) == 0) {
-                            req = "INSERT INTO hashtag VALUES(NULL,'"+nomHashtag+"',1)";
-                        }
-                        else {
-                            req = "UPDATE hashtag SET nb_occurence = nb_occurence + 1 WHERE hashtag = '"+nomHashtag+"'";
-                        }
-                        query.sendUpdate(req);
-                        query.sendUpdate("UPDATE tweets SET analysed = 1 WHERE id_tweet = "+results.getString(2));
-                    }
+        
+        while(results.next()) {
+            BigDecimal id_tweet = results.getBigDecimal(2);
+            
+            req = "UPDATE evaluation SET hashtag_analysed = 1 WHERE id_evaluation = "+results.getInt(1);
+            query.sendUpdate(req);
+            
+            req = "SELECT text FROM tweets WHERE id_tweet = "+id_tweet;
+            results1 = query.sendQuery(req);
+            results1.next();
+            
+            listeTweet = returnHashtags(results1.getString(1));
+            it = listeTweet.iterator();
+            
+            while(it.hasNext()) {
+                nomHashtag = (String) it.next();
+                req = "SELECT COUNT(*) FROM hashtag WHERE hashtag = '"+nomHashtag+"'";
+                results1 = query.sendQuery(req);
+                results1.next();
+                if(results1.getInt(1) == 0) {
+                    req = "INSERT INTO hashtag VALUES(NULL,'"+nomHashtag+"',1)";
+                }
+                else {
+                    req = "UPDATE hashtag SET nb_occurence = nb_occurence + 1 WHERE hashtag = '"+nomHashtag+"'";
+                }
+                query.sendUpdate(req);
             }
         }
     }
@@ -184,14 +178,14 @@ public class Analyse {
         Iterator it;
         int idHash;
         
-        req = "SELECT * FROM evaluation WHERE hashtag_analysed = 0";                        
+        req = "SELECT * FROM evaluation WHERE hashtag_rating_analysed = 0";                        
         results = query.sendQuery(req);
 
         while (results.next()) {
             BigDecimal id_tweet = results.getBigDecimal(2);
             String eval = results.getString(4);
             
-            req = "UPDATE evaluation SET hashtag_analysed = 1 WHERE id_evaluation = "+results.getInt(1);
+            req = "UPDATE evaluation SET hashtag_rating_analysed = 1 WHERE id_evaluation = "+results.getInt(1);
             query.sendUpdate(req);
 
             req = "SELECT text FROM tweets WHERE id_tweet = "+id_tweet;
@@ -341,7 +335,8 @@ public class Analyse {
         Query query = new Query();
         ResultSet results;
         ArrayList<String> listeHashtags = returnHashtags(tweetText);
-        int total, eval = -1;
+        int total;
+        boolean eval = false;
         TT4J tt;
         ArrayList<String> listLemma;
         it = listeHashtags.iterator();
@@ -350,18 +345,24 @@ public class Analyse {
         //PROBLEME ICI SI LE HASHTAG N'A JAMAIS ETE RATE
         while(it.hasNext()) {
             hashTag = (String) it.next();
-            req = "SELECT * FROM hashtag, hashtag_rating WHERE id_hashtag = fk_id_hashtag AND hashtag LIKE '"+hashTag+"'";
+            //On teste ici si le hashtag existe deja dans la base, si non on ne peut evaluer le tweet
+            req = "SELECT COUNT(*) FROM hashtag WHERE hashtag = '"+hashTag+"'";
             results = query.sendQuery(req);
             results.next();
-            // 70% pour ou contre on colore sinon on vire
-            total = results.getInt("nb_against") + results.getInt("nb_favorable") + results.getInt("nb_neutral") + results.getInt("nb_cantSay");
-            if(results.getLong("nb_favorable")>((70*total)/100)) {
-                // Coloré favorable
-                eval = 0;
-            }
-            else if (results.getLong("nb_against")>((70*total)/100)) {
-                // Coloré against
-                eval = 1;
+            if(results.getInt(1)==0) {
+                req = "SELECT * FROM hashtag, hashtag_rating WHERE id_hashtag = fk_id_hashtag AND hashtag LIKE '"+hashTag+"'";
+                results = query.sendQuery(req);
+                results.next();
+                // 70% pour ou contre on colore sinon on vire
+                total = results.getInt("nb_against") + results.getInt("nb_favorable") + results.getInt("nb_neutral") + results.getInt("nb_cantSay");
+                if(results.getLong("nb_favorable")>((70*total)/100)) {
+                    // Coloré favorable
+                    eval = false;
+                }
+                else if (results.getLong("nb_against")>((70*total)/100)) {
+                    // Coloré against
+                    eval = true;
+                }
             }
         }
         System.out.println(eval);
