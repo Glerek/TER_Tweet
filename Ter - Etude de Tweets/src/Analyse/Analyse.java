@@ -5,8 +5,10 @@
 package Analyse;
 
 import BDD.Query;
+import com.sun.xml.internal.messaging.saaj.packaging.mime.util.QEncoderStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -18,23 +20,7 @@ import org.annolab.tt4j.TreeTaggerException;
  */
 public class Analyse {
     
-    public Analyse() {                                                  
-        /*req = "SELECT * FROM hashtag ORDER BY nb_occurence DESC LIMIT 0 , 5";
-
-        results = my_st.executeQuery(req);
-
-        while(results.next()) {
-            //System.out.println(results.getString(2));
-            my_st1 = connection.createStatement();
-            req = "SELECT * FROM tweets WHERE rand() > 0.9 AND text LIKE '%"+results.getString(2)+"%' ORDER BY rand() LIMIT 0, 10";
-            results1 = my_st1.executeQuery(req);
-            score = 0;
-
-            while(results1.next()) {
-                System.out.println(results1.getString(5));
-                //Ici on va regarder si l'auteur de chaque tweet est orienté et noter un score (+ ou -)
-            }
-        }*/
+    public Analyse() {
     }
     
     private static ArrayList<String> returnHashtags(String txt) {
@@ -49,7 +35,7 @@ public class Analyse {
             if(posNextSpace == -1) {
                 posNextSpace = txt.length();
             }
-            result.add(txt.substring(posOc, posNextSpace));
+            result.add(txt.substring(posOc, posNextSpace).replaceAll("[']", ""));
             nbOc++;
         }
         return result;
@@ -139,14 +125,16 @@ public class Analyse {
         Iterator it;
         ArrayList<String> listeTweet;
         
-        req = "SELECT * FROM evaluation WHERE hashtag_analysed = 0";
+        req = "SELECT * FROM evaluation_temp WHERE hashtag_analysed = 0";
         results = query.sendQuery(req);
         
         while(results.next()) {
             BigDecimal id_tweet = results.getBigDecimal(2);
+            System.out.println(id_tweet);
             
-            req = "UPDATE evaluation SET hashtag_analysed = 1 WHERE id_evaluation = "+results.getInt(1);
+            req = "UPDATE evaluation_temp SET hashtag_analysed = 1 WHERE id_evaluation_temp = "+results.getInt(1);
             query.sendUpdate(req);
+            query.close();
             
             req = "SELECT text FROM tweets WHERE id_tweet = "+id_tweet;
             results1 = query.sendQuery(req);
@@ -167,32 +155,37 @@ public class Analyse {
                     req = "UPDATE hashtag SET nb_occurence = nb_occurence + 1 WHERE hashtag = '"+nomHashtag+"'";
                 }
                 query.sendUpdate(req);
+                query.close();
             }
         }
     }
     
     public void updateHashtagRating() throws SQLException {
-        String req, nomHashtag;
+        String req, nomHashtag, subject;
         ResultSet results, results1;
         Query query = new Query();
         Iterator it;
-        int idHash;
+        int idHash,nb;
         
-        req = "SELECT * FROM evaluation WHERE hashtag_rating_analysed = 0";                        
+        req = "SELECT * FROM evaluation_temp WHERE hashtag_rating_analysed = 0";                        
         results = query.sendQuery(req);
 
         while (results.next()) {
             BigDecimal id_tweet = results.getBigDecimal(2);
-            String eval = results.getString(4);
+            String eval = results.getString(3);
+            System.out.println(id_tweet);
             
-            req = "UPDATE evaluation SET hashtag_rating_analysed = 1 WHERE id_evaluation = "+results.getInt(1);
+            req = "UPDATE evaluation_temp SET hashtag_rating_analysed = 1 WHERE id_evaluation_temp = "+results.getInt(1);
             query.sendUpdate(req);
+            query.close();
 
-            req = "SELECT text FROM tweets WHERE id_tweet = "+id_tweet;
+            req = "SELECT text, val_string FROM tweets, notes WHERE id_tweet = "+id_tweet+" AND id_tweet = fk_id_tweet";
             results1 = query.sendQuery(req);
             results1.next();
+            subject = results1.getString(2);
             ArrayList<String> listeHash = returnHashtags(results1.getString(1));
             it = listeHash.iterator();
+            query.close();
 
             while(it.hasNext()) {
                 nomHashtag = (String) it.next();
@@ -201,31 +194,36 @@ public class Analyse {
                 results1 = query.sendQuery(req);
                 results1.next();
                 idHash = results1.getInt(1);
+                query.close();
 
                 //On verifie que le hashtag est deja present dans la base
-                req = "SELECT COUNT(*) FROM hashtag_rating WHERE fk_id_hashtag = "+idHash;
+                req = "SELECT COUNT(*) FROM hashtag_rating WHERE fk_id_hashtag = "+idHash+" AND subject = '"+subject+"'";
                 results1 = query.sendQuery(req);
                 results1.next();
-                if(results1.getInt(1)==0) {
-                    req = "INSERT INTO hashtag_rating VALUES (NULL,"+idHash+",0,0,0,0)";
+                nb = results1.getInt(1);
+                query.close();
+                if(nb==0) {
+                    req = "INSERT INTO hashtag_rating VALUES (NULL,"+idHash+",'"+subject+"',0,0,0,0)";
                     query.sendUpdate(req);
+                    query.close();
                 }
 
                 switch(eval) {
                     case "against":
-                        req = "UPDATE hashtag_rating SET nb_against = nb_against + 1 WHERE fk_id_hashtag = "+idHash;
+                        req = "UPDATE hashtag_rating SET nb_against = nb_against + 1 WHERE fk_id_hashtag = "+idHash+" AND subject = '"+subject+"'";
                         break;
                     case "favorable":
-                        req = "UPDATE hashtag_rating SET nb_favorable = nb_favorable + 1 WHERE fk_id_hashtag = "+idHash;
+                        req = "UPDATE hashtag_rating SET nb_favorable = nb_favorable + 1 WHERE fk_id_hashtag = "+idHash+" AND subject = '"+subject+"'";
                         break;
                     case "neutral":
-                        req = "UPDATE hashtag_rating SET nb_neutral = nb_neutral + 1 WHERE fk_id_hashtag = "+idHash;
+                        req = "UPDATE hashtag_rating SET nb_neutral = nb_neutral + 1 WHERE fk_id_hashtag = "+idHash+" AND subject = '"+subject+"'";
                         break;
                     case "cantSay":
-                        req = "UPDATE hashtag_rating SET nb_cantSay = nb_cantSay + 1 WHERE fk_id_hashtag = "+idHash;
+                        req = "UPDATE hashtag_rating SET nb_cantSay = nb_cantSay + 1 WHERE fk_id_hashtag = "+idHash+" AND subject = '"+subject+"'";
                         break;
                 }
                 query.sendUpdate(req);
+                query.close();
             }
         }
     }
@@ -235,15 +233,18 @@ public class Analyse {
         ResultSet results, results1;
         Iterator it;
         Query query = new Query();
+        int nb;
         
-        req = "SELECT * FROM evaluation WHERE expression_analysed = 0";                        
+        req = "SELECT * FROM evaluation_temp WHERE expression_analysed = 0";                        
         results = query.sendQuery(req);
 
         while (results.next()) {
             BigDecimal id_tweet = results.getBigDecimal(2);
+            System.out.println(id_tweet);
             
-            req = "UPDATE evaluation SET expression_analysed = 1 WHERE id_evaluation = "+results.getInt(1);
+            req = "UPDATE evaluation_temp SET expression_analysed = 1 WHERE id_evaluation_temp = "+results.getInt(1);
             query.sendUpdate(req);
+            query.close();
 
             req = "SELECT text FROM tweets WHERE id_tweet = "+id_tweet;
             results1 = query.sendQuery(req);
@@ -251,6 +252,7 @@ public class Analyse {
             TT4J tt = new TT4J(cleanString(results1.getString(1)));
             ArrayList<String> listLemma = tt.getLemma();
             it = listLemma.iterator();
+            query.close();
 
             while(it.hasNext()) {
                 String lemma = (String) it.next();
@@ -258,12 +260,16 @@ public class Analyse {
                 req = "SELECT COUNT(*) FROM expression WHERE expression = '"+lemma+"'";
                 results1 = query.sendQuery(req);
                 results1.next();
-                if(results1.getInt(1)==0) {
+                nb = results1.getInt(1);
+                query.close();
+                if(nb==0) {
                     req = "INSERT INTO expression VALUES (NULL,'"+lemma+"',0)";
                     query.sendUpdate(req);
+                    query.close();
                 }
                 req = "UPDATE expression SET nb_occurence = nb_occurence +1 WHERE expression = '"+lemma+"'";
                 query.sendUpdate(req);
+                query.close();
             }
         }
     }
@@ -272,19 +278,21 @@ public class Analyse {
         String req, nomExpression;
         ResultSet results, results1;
         Iterator it;
-        int idHash;
+        int idHash,nb;
         Query query = new Query();
         
-        req = "SELECT * FROM evaluation WHERE expression_rating_analysed = 0";
+        req = "SELECT * FROM evaluation_temp WHERE expression_rating_analysed = 0";
                         
         results = query.sendQuery(req);
 
         while (results.next()) {
             BigDecimal id_tweet = results.getBigDecimal(2);
-            String eval = results.getString(4);
+            String eval = results.getString(3);
+            System.out.println(id_tweet+" / "+eval);
             
-            req = "UPDATE evaluation SET expression_rating_analysed = 1 WHERE id_evaluation = "+results.getInt(1);
+            req = "UPDATE evaluation_temp SET expression_rating_analysed = 1 WHERE id_evaluation_temp = "+results.getInt(1);
             query.sendUpdate(req);
+            query.close();
 
             req = "SELECT text FROM tweets WHERE id_tweet = "+id_tweet;
             results1 = query.sendQuery(req);
@@ -292,6 +300,7 @@ public class Analyse {
             TT4J tt = new TT4J(cleanString(results1.getString(1)));
             ArrayList<String> listLemma = tt.getLemma();
             it = listLemma.iterator();
+            query.close();
 
             while(it.hasNext()) {
                 nomExpression = (String) it.next();
@@ -300,14 +309,18 @@ public class Analyse {
                 results1 = query.sendQuery(req);
                 results1.next();
                 idHash = results1.getInt(1);
+                query.close();
 
                 //On verifie que l'expression est deja presente dans la base
                 req = "SELECT COUNT(*) FROM expression_rating WHERE fk_id_expression = "+idHash;
                 results1 = query.sendQuery(req);
                 results1.next();
-                if(results1.getInt(1)==0) {
+                nb=results1.getInt(1);
+                query.close();
+                if(nb==0) {
                     req = "INSERT INTO expression_rating VALUES (NULL,"+idHash+",0,0,0,0)";
                     query.sendUpdate(req);
+                    query.close();
                 }
 
                 switch(eval) {
@@ -325,47 +338,71 @@ public class Analyse {
                         break;
                 }
                 query.sendUpdate(req);
+                query.close();
             }
         }
     }
     
-    public void evaluateTweets(String tweetText, int idTweet) throws SQLException, IOException, TreeTaggerException {
+    public void evaluateTweets(String tweetText, String idTweet) throws SQLException, IOException, TreeTaggerException {
         Iterator it;
-        String hashTag, req, nomExpression;
+        String hashTag, req, nomExpression,subject;
         Query query = new Query();
         ResultSet results;
         ArrayList<String> listeHashtags = returnHashtags(tweetText);
-        int total;
-        boolean eval = false;
+        int total, scoreHash = 0, scoreExpr = 0,nb;
+        boolean update = false;
         TT4J tt;
         ArrayList<String> listLemma;
+        ArrayList<String> listCand = new ArrayList<String>();
         it = listeHashtags.iterator();
         
+        //On construit un tableau avec les noms des candidats, il ne faut pas les prendre en compte dans la routine
+        listCand.add("FH2012");
+        listCand.add("NS2012");
+        listCand.add("Joly");
+        listCand.add("MLP2012");
+        listCand.add("Mélenchon");
+        listCand.add("Montebourg");
+        listCand.add("Bayrou");
+        
+        //On recupere le sujet
+        req = "SELECT val_string, COUNT(*) FROM notes WHERE fk_id_tweet = "+idTweet;
+        results = query.sendQuery(req);
+        results.next();
+        //Certains tweets n'ont pas de sujets
+        if(results.getInt(2) != 0) {
+        subject = results.getString(1);
+        query.close();
+        
         //On evalue en fonction des hashtags
-        //PROBLEME ICI SI LE HASHTAG N'A JAMAIS ETE RATE
         while(it.hasNext()) {
             hashTag = (String) it.next();
-            //On teste ici si le hashtag existe deja dans la base, si non on ne peut evaluer le tweet
-            req = "SELECT COUNT(*) FROM hashtag WHERE hashtag = '"+hashTag+"'";
+            //On teste ici si le hashtag existe deja dans la base, si non on ne peut evaluer le hash
+            req = "SELECT COUNT(*) FROM hashtag, hashtag_rating WHERE id_hashtag = fk_id_hashtag AND hashtag LIKE '"+hashTag+"' AND subject LIKE '"+subject+"'";
             results = query.sendQuery(req);
             results.next();
-            if(results.getInt(1)==0) {
-                req = "SELECT * FROM hashtag, hashtag_rating WHERE id_hashtag = fk_id_hashtag AND hashtag LIKE '"+hashTag+"'";
+            nb=results.getInt(1);
+            query.close();
+            if(nb!=0 && !listCand.contains(hashTag)) {
+                System.out.println(hashTag);
+                req = "SELECT * FROM hashtag, hashtag_rating WHERE id_hashtag = fk_id_hashtag AND hashtag LIKE '"+hashTag+"' AND subject LIKE '"+subject+"'";
                 results = query.sendQuery(req);
                 results.next();
                 // 70% pour ou contre on colore sinon on vire
                 total = results.getInt("nb_against") + results.getInt("nb_favorable") + results.getInt("nb_neutral") + results.getInt("nb_cantSay");
                 if(results.getLong("nb_favorable")>((70*total)/100)) {
                     // Coloré favorable
-                    eval = false;
+                    //eval = true;
+                    scoreHash += 1;
                 }
                 else if (results.getLong("nb_against")>((70*total)/100)) {
                     // Coloré against
-                    eval = true;
+                    //eval = true;
+                    scoreHash -= 1;
                 }
+                query.close();
             }
         }
-        System.out.println(eval);
         
         //On evalue en fonctions des expressions
         tt = new TT4J(cleanString(tweetText));
@@ -374,7 +411,59 @@ public class Analyse {
         
         while(it.hasNext()) {
             nomExpression = (String) it.next();
-            System.out.println(nomExpression);
+            //System.out.println(nomExpression);
+            //On teste ici si l'expression existe deja dans la base, si non on ne peut l'evaluer
+            req = "SELECT COUNT(*) FROM expression WHERE expression = '"+nomExpression+"'";
+            results = query.sendQuery(req);
+            results.next();
+            nb = results.getInt(1);
+            query.close();
+            if(nb!=0) {
+                req = "SELECT * FROM expression, expression_rating WHERE id_expression = fk_id_expression AND expression LIKE '"+nomExpression+"'";
+                results = query.sendQuery(req);
+                results.next();
+                // 70% pour ou contre on colore sinon on vire
+                total = results.getInt("nb_against") + results.getInt("nb_favorable") + results.getInt("nb_neutral") + results.getInt("nb_cantSay");
+                if(results.getLong("nb_favorable")>((70*total)/100)) {
+                    // Coloré favorable
+                    //eval = true;
+                    scoreExpr += 1;
+                }
+                else if (results.getLong("nb_against")>((70*total)/100)) {
+                    // Coloré against
+                    //eval = true;
+                    scoreExpr -= 1;
+                }
+                query.close();
+            }
+        }
+        //System.out.println("Tweet : "+tweetText+" / Score Hash : "+scoreHash+" / Score Expr : "+scoreExpr);
+        if(scoreExpr < 0 && scoreHash < 0) {
+            req = "INSERT INTO evaluation_temp VALUES (NULL,"+idTweet+",'against','"+subject+"',0,0,0,0)";
+            query.sendUpdate(req);
+            query.close();
+            System.out.println(req);
+            update = true;
+        }
+        else if(scoreExpr > 0 && scoreHash > 0) {
+            req = "INSERT INTO evaluation_temp VALUES (NULL,"+idTweet+",'favorable','"+subject+"',0,0,0,0)";
+            query.sendUpdate(req);
+            query.close();
+            System.out.println(req);
+            update = true;
+        }
+        
+        if(update) {
+            //Si on a ajouté quelque chose dans la table evaluation alors on met a jour les autres tables
+            updateHashtagBase();
+            updateHashtagRating();
+            updateExpressionBase();
+            updateExpressionRating();
+            
+            req = "UPDATE tweets SET analysed = 1 WHERE id_tweet = "+idTweet;
+            query.sendUpdate(req);
+            query.close();
+        }
         }
     }
 }   

@@ -6,6 +6,7 @@ package BDD;
 
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
@@ -16,6 +17,12 @@ public class Query {
     private String connectionString;
     private String user;
     private String password;
+    private java.sql.Connection connection;
+    
+    public void close() throws SQLException
+    {
+        this.connection.close();
+    }
     
     public Query()
     {
@@ -29,13 +36,34 @@ public class Query {
         this.password = "";
     }
     
+    public Query(int indiceTable)
+    {
+        /*XmlAction xmlAction = new XmlAction();
+        xmlAction.parseXmlFile();
+        xmlAction.parseDocument();*/
+        if(indiceTable == 1)
+        {
+        this.connectionString = "jdbc:mysql://localhost:3306/auto";
+        this.user = "root";
+        this.password = "";
+        }
+        else
+        {
+            this.connectionString = "jdbc:mysql://localhost:3306/tweets";
+             this.user = "root";
+             this.password = "";
+        }
+    }
+    
+    
+    
     public ResultSet sendQuery(String queryString)
     {
         ResultSet results = null;
         try {
                         Statement my_st = null;
 
-			java.sql.Connection connection = DriverManager.getConnection(connectionString,user,password);
+			this. connection = DriverManager.getConnection(connectionString,user,password);
 
 			my_st = connection.createStatement();
 
@@ -55,7 +83,7 @@ public class Query {
         try {
                         Statement my_st = null;
 
-			java.sql.Connection connection = DriverManager.getConnection(connectionString,user,password);
+			this.connection = DriverManager.getConnection(connectionString,user,password);
 
 			my_st = connection.createStatement();
 

@@ -48,6 +48,7 @@ public class TT4J {
                         lemma = lemma.replaceAll("['\"()\\.,!\\?:&%]","");
                         lemma = lemma.replaceAll("[0-9]","");
                         lemma = lemma.replaceAll("[\\-]","");
+                        lemma = lemma.replaceAll("[\\\\/]","");
                         if(lemma.isEmpty() == false) {
                             //System.out.println(token + "\t" + pos + "\t" + lemma);
                             positionTt4j.add(pos);
